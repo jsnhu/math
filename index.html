@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Squares — Mental Math</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #555;
+    --accent: #4f9cf9;
+    --correct: #3ecf6e;
+    --wrong: #f94f4f;
+    --font: 'JetBrains Mono', monospace;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; padding: 24px; }
+  .screen.active { display: flex; }
+
+  /* ── HOME ── */
+  #home { gap: 48px; }
+  .home-title { text-align: center; }
+  .home-title h1 { font-size: clamp(2rem, 8vw, 3.5rem); font-weight: 700; letter-spacing: -0.03em; }
+  .home-title p { color: var(--muted); font-size: 0.85rem; font-weight: 300; margin-top: 8px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .home-actions { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 280px; }
+  .btn {
+    width: 100%; padding: 16px; border: none; border-radius: 10px;
+    font-family: var(--font); font-size: 1rem; font-weight: 600; letter-spacing: 0.02em;
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: #0f0f0f; }
+  .btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+  /* ── SETTINGS ── */
+  #settings { gap: 32px; max-width: 320px; width: 100%; }
+  .settings-header { display: flex; align-items: center; gap: 12px; width: 100%; }
+  .back-btn { background: none; border: none; color: var(--muted); font-family: var(--font); font-size: 1.2rem; cursor: pointer; padding: 4px 8px 4px 0; transition: color 0.15s; }
+  .back-btn:hover { color: var(--text); }
+  .settings-header h2 { font-size: 1rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  .setting-group { width: 100%; }
+  .setting-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; }
+  .range-inputs { display: flex; align-items: center; gap: 12px; }
+  .range-inputs span { color: var(--muted); font-size: 0.85rem; }
+  .num-input {
+    flex: 1; padding: 14px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 1.1rem;
+    font-weight: 600; text-align: center; outline: none; transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+  .num-input::-webkit-outer-spin-button,
+  .num-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .num-input:focus { border-color: var(--accent); }
+  .setting-error { font-size: 0.75rem; color: var(--wrong); margin-top: 8px; min-height: 18px; }
+
+  /* ── TRAIN ── */
+  #train { gap: 0; justify-content: space-between; padding: 0; }
+
+  .train-header {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 0;
+  }
+  .train-header .back-btn { font-size: 1.4rem; }
+  .progress-label { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.06em; }
+
+  .stage {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; padding: 24px;
+  }
+
+  .prompt-label {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--muted); font-weight: 400;
+  }
+
+  .question-number {
+    font-size: clamp(5rem, 22vw, 10rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    transition: color 0.2s;
+    user-select: none;
+  }
+
+  .superscript {
+    font-size: clamp(2rem, 8vw, 4rem);
+    vertical-align: super;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .answer-display {
+    margin-top: 8px;
+    font-size: clamp(2.2rem, 9vw, 4rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    min-height: 1.2em;
+    transition: color 0.15s;
+  }
+  .answer-display.correct { color: var(--correct); }
+  .answer-display.empty { color: var(--muted); }
+
+  .cursor {
+    display: inline-block; width: 3px; height: 0.85em;
+    background: var(--accent); vertical-align: middle; margin-left: 3px;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* ── NUMPAD ── */
+  .numpad-area {
+    width: 100%; padding: 16px 24px 32px;
+    display: flex; flex-direction: column; gap: 10px; max-width: 400px; margin: 0 auto;
+  }
+
+  .numpad {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+
+  .key {
+    aspect-ratio: 1.4 / 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: clamp(1.2rem, 5vw, 1.6rem);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.1s, transform 0.08s, border-color 0.1s;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .key:active, .key.pressed { background: #2c2c2c; transform: scale(0.94); border-color: #3a3a3a; }
+  .key.zero { grid-column: span 2; aspect-ratio: unset; padding: 14px 0; }
+  .key.del { background: transparent; border-color: transparent; color: var(--muted); font-size: 1.4rem; }
+  .key.del:active { background: var(--surface); border-color: var(--border); color: var(--text); }
+
+  /* ── FLASH ── */
+  .flash-overlay {
+    position: fixed; inset: 0; pointer-events: none;
+    opacity: 0; transition: opacity 0.08s;
+  }
+  .flash-overlay.green { background: rgba(62, 207, 110, 0.08); }
+  .flash-overlay.active { opacity: 1; }
+
+  /* ── RESULT ── */
+  #result { gap: 32px; }
+  .result-score { text-align: center; }
+  .result-score .big { font-size: clamp(3rem, 14vw, 6rem); font-weight: 700; color: var(--accent); line-height: 1; }
+  .result-score .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-top: 8px; }
+  .result-actions { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 280px; }
+
+  /* ── util ── */
+  @media (prefers-reduced-motion: reduce) {
+    .cursor { animation: none; opacity: 1; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="flash-overlay green" id="flashOverlay"></div>
+
+<!-- HOME -->
+<div class="screen active" id="home">
+  <div class="home-title">
+    <h1>x²</h1>
+    <p>Squares Training</p>
+  </div>
+  <div class="home-actions">
+    <button class="btn btn-primary" onclick="startTraining()">Start</button>
+    <button class="btn btn-ghost" onclick="showScreen('settings')">Settings</button>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="screen" id="settings">
+  <div class="settings-header">
+    <button class="back-btn" onclick="saveSettings()">←</button>
+    <h2>Settings</h2>
+  </div>
+  <div class="setting-group">
+    <div class="setting-label">Range</div>
+    <div class="range-inputs">
+      <input class="num-input" id="rangeMin" type="number" min="1" max="999" value="10" inputmode="numeric">
+      <span>to</span>
+      <input class="num-input" id="rangeMax" type="number" min="1" max="999" value="100" inputmode="numeric">
+    </div>
+    <div class="setting-error" id="settingError"></div>
+  </div>
+  <div class="home-actions" style="max-width:280px;width:100%;">
+    <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+  </div>
+</div>
+
+<!-- TRAIN -->
+<div class="screen" id="train">
+  <div class="train-header">
+    <button class="back-btn" onclick="endSession()">←</button>
+    <div class="progress-label" id="progressLabel">1 / 10</div>
+  </div>
+
+  <div class="stage">
+    <div class="prompt-label">What is</div>
+    <div class="question-number" id="questionNumber">
+      <span id="numDisplay">12</span><span class="superscript">²</span>
+    </div>
+    <div class="answer-display empty" id="answerDisplay">
+      <span id="answerText"></span><span class="cursor" id="cursor"></span>
+    </div>
+  </div>
+
+  <div class="numpad-area">
+    <div class="numpad">
+      <button class="key" data-val="7">7</button>
+      <button class="key" data-val="8">8</button>
+      <button class="key" data-val="9">9</button>
+      <button class="key" data-val="4">4</button>
+      <button class="key" data-val="5">5</button>
+      <button class="key" data-val="6">6</button>
+      <button class="key" data-val="1">1</button>
+      <button class="key" data-val="2">2</button>
+      <button class="key" data-val="3">3</button>
+      <button class="key zero" data-val="0">0</button>
+      <button class="key del" data-val="del">⌫</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="result">
+  <div class="result-score">
+    <div class="big" id="resultTime">—</div>
+    <div class="label">avg. seconds per question</div>
+  </div>
+  <div class="result-actions">
+    <button class="btn btn-primary" onclick="startTraining()">Again</button>
+    <button class="btn btn-ghost" onclick="showScreen('home')">Home</button>
+  </div>
+</div>
+
+<script>
+  // ── State ──
+  const state = {
+    min: 10,
+    max: 100,
+    queue: [],
+    index: 0,
+    current: null,
+    typed: '',
+    sessionStart: null,
+    questionStart: null,
+    times: [],
+  };
+
+  // ── Screen nav ──
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // ── Settings ──
+  function saveSettings() {
+    const minEl = document.getElementById('rangeMin');
+    const maxEl = document.getElementById('rangeMax');
+    const errEl = document.getElementById('settingError');
+    const min = parseInt(minEl.value, 10);
+    const max = parseInt(maxEl.value, 10);
+    if (isNaN(min) || isNaN(max) || min < 1 || max < 1) {
+      errEl.textContent = 'Enter valid numbers.'; return;
+    }
+    if (min >= max) {
+      errEl.textContent = 'Min must be less than max.'; return;
+    }
+    errEl.textContent = '';
+    state.min = min;
+    state.max = max;
+    showScreen('home');
+  }
+
+  // ── Training logic ──
+  function buildQueue() {
+    const nums = [];
+    for (let i = state.min; i <= state.max; i++) nums.push(i);
+    // Shuffle
+    for (let i = nums.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [nums[i], nums[j]] = [nums[j], nums[i]];
+    }
+    return nums;
+  }
+
+  function startTraining() {
+    state.queue = buildQueue();
+    state.index = 0;
+    state.times = [];
+    state.sessionStart = Date.now();
+    showScreen('train');
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    state.current = state.queue[state.index];
+    state.typed = '';
+    state.questionStart = Date.now();
+    document.getElementById('numDisplay').textContent = state.current;
+    document.getElementById('progressLabel').textContent = `${state.index + 1} / ${state.queue.length}`;
+    updateAnswerDisplay();
+  }
+
+  function updateAnswerDisplay() {
+    const el = document.getElementById('answerDisplay');
+    const text = document.getElementById('answerText');
+    text.textContent = state.typed;
+    el.classList.toggle('empty', state.typed === '');
+    el.classList.remove('correct');
+  }
+
+  function handleInput(val) {
+    if (val === 'del') {
+      state.typed = state.typed.slice(0, -1);
+      updateAnswerDisplay();
+      return;
+    }
+    // Max 7 digits (100² = 10000, guard against huge input)
+    if (state.typed.length >= 7) return;
+    // No leading zeros
+    if (state.typed === '' && val === '0') return;
+    state.typed += val;
+    updateAnswerDisplay();
+    checkAnswer();
+  }
+
+  function checkAnswer() {
+    const correct = state.current * state.current;
+    if (parseInt(state.typed, 10) === correct) {
+      const elapsed = (Date.now() - state.questionStart) / 1000;
+      state.times.push(elapsed);
+      flashCorrect();
+      document.getElementById('answerDisplay').classList.add('correct');
+      setTimeout(() => {
+        state.index++;
+        if (state.index >= state.queue.length) {
+          showResults();
+        } else {
+          loadQuestion();
+        }
+      }, 320);
+    }
+  }
+
+  function flashCorrect() {
+    const overlay = document.getElementById('flashOverlay');
+    overlay.classList.add('active');
+    setTimeout(() => overlay.classList.remove('active'), 180);
+  }
+
+  function endSession() {
+    showScreen('home');
+  }
+
+  function showResults() {
+    const avg = state.times.reduce((a, b) => a + b, 0) / state.times.length;
+    document.getElementById('resultTime').textContent = avg.toFixed(2) + 's';
+    showScreen('result');
+  }
+
+  // ── Numpad ──
+  document.querySelectorAll('.key').forEach(key => {
+    key.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      key.classList.add('pressed');
+      handleInput(key.dataset.val);
+    });
+    key.addEventListener('pointerup', () => key.classList.remove('pressed'));
+    key.addEventListener('pointerleave', () => key.classList.remove('pressed'));
+  });
+
+  // ── Physical keyboard ──
+  document.addEventListener('keydown', e => {
+    const screen = document.querySelector('.screen.active');
+    if (!screen || screen.id !== 'train') return;
+    if (e.key >= '0' && e.key <= '9') handleInput(e.key);
+    else if (e.key === 'Backspace') handleInput('del');
+  });
+
+  // ── Init settings inputs ──
+  document.getElementById('rangeMin').value = state.min;
+  document.getElementById('rangeMax').value = state.max;
+</script>
+</body>
+</html>
