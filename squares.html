@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Squares — Mental Math</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  #train { justify-content: space-between; padding: 0; gap: 0; }
+
+  .question-number {
+    font-size: clamp(5rem, 22vw, 10rem);
+    font-weight: 700; letter-spacing: -0.04em; line-height: 1;
+    user-select: none;
+  }
+  .superscript {
+    font-size: clamp(2rem, 8vw, 4rem);
+    vertical-align: super; color: var(--accent); font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<!-- HOME -->
+<div class="screen active" id="home">
+  <div class="hub-title" style="margin-bottom:4px">
+    <h1 style="font-size:clamp(2.5rem,12vw,5rem);letter-spacing:-0.04em">x²</h1>
+    <p>Squares Training</p>
+  </div>
+  <div class="btn-group" style="margin-top:32px">
+    <button class="btn btn-primary" onclick="startTraining()">Start</button>
+    <button class="btn btn-ghost"   onclick="showScreen('settings')">Settings</button>
+    <a class="btn btn-ghost" href="index.html" style="text-align:center;text-decoration:none">← Home</a>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="screen" id="settings">
+  <div class="settings-body">
+    <div class="settings-header">
+      <button class="back-btn" onclick="saveSettings()">←</button>
+      <h2>Settings</h2>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Number range</div>
+      <div class="setting-row">
+        <input class="num-input" id="rangeMin" type="number" min="1" max="999" inputmode="numeric">
+        <span>to</span>
+        <input class="num-input" id="rangeMax" type="number" min="1" max="999" inputmode="numeric">
+      </div>
+      <div class="setting-error" id="settingError"></div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRAIN -->
+<div class="screen" id="train">
+  <div class="top-bar">
+    <button class="back-btn" onclick="endSession()">←</button>
+    <div class="progress-label" id="progressLabel">1 / 10</div>
+  </div>
+  <div class="stage">
+    <div class="prompt-label">What is</div>
+    <div class="question-number">
+      <span id="numDisplay">12</span><span class="superscript">²</span>
+    </div>
+    <div class="answer-display empty" id="answerDisplay">
+      <span class="ans-text"></span><span class="cursor"></span>
+    </div>
+  </div>
+  <div class="numpad-area">
+    <div class="numpad">
+      <button class="key" data-val="7">7</button>
+      <button class="key" data-val="8">8</button>
+      <button class="key" data-val="9">9</button>
+      <button class="key" data-val="4">4</button>
+      <button class="key" data-val="5">5</button>
+      <button class="key" data-val="6">6</button>
+      <button class="key" data-val="1">1</button>
+      <button class="key" data-val="2">2</button>
+      <button class="key" data-val="3">3</button>
+      <button class="key zero" data-val="0">0</button>
+      <button class="key del"  data-val="del">⌫</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="result">
+  <div class="result-stat">
+    <div class="big" id="resultTime">—</div>
+    <div class="label">avg. seconds per question</div>
+  </div>
+  <div class="btn-group" style="margin-top:40px">
+    <button class="btn btn-primary" onclick="startTraining()">Again</button>
+    <button class="btn btn-ghost"   onclick="showScreen('home')">Home</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  const cfg = { min: 10, max: 100 };
+  const session = { queue: [], index: 0, typed: '', times: [], questionStart: 0 };
+
+  // ── screens ──
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // ── settings ──
+  function initSettingsUI() {
+    document.getElementById('rangeMin').value = cfg.min;
+    document.getElementById('rangeMax').value = cfg.max;
+  }
+  function saveSettings() {
+    const min = parseInt(document.getElementById('rangeMin').value, 10);
+    const max = parseInt(document.getElementById('rangeMax').value, 10);
+    const err = document.getElementById('settingError');
+    if (isNaN(min) || isNaN(max) || min < 1 || max < 1) { err.textContent = 'Enter valid numbers.'; return; }
+    if (min >= max) { err.textContent = 'Min must be less than max.'; return; }
+    err.textContent = '';
+    cfg.min = min; cfg.max = max;
+    showScreen('home');
+  }
+
+  // ── training ──
+  function buildQueue() {
+    const nums = [];
+    for (let i = cfg.min; i <= cfg.max; i++) nums.push(i);
+    return shuffle(nums);
+  }
+
+  function startTraining() {
+    session.queue = buildQueue();
+    session.index = 0;
+    session.times = [];
+    showScreen('train');
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    session.typed = '';
+    session.questionStart = Date.now();
+    const n = session.queue[session.index];
+    document.getElementById('numDisplay').textContent = n;
+    document.getElementById('progressLabel').textContent = `${session.index + 1} / ${session.queue.length}`;
+    renderAnswer('', 'answerDisplay');
+  }
+
+  function handleInput(val) {
+    session.typed = applyInput(session.typed, val);
+    renderAnswer(session.typed, 'answerDisplay');
+    const n = session.queue[session.index];
+    if (session.typed !== '' && parseInt(session.typed, 10) === n * n) {
+      session.times.push((Date.now() - session.questionStart) / 1000);
+      markCorrect('answerDisplay');
+      flashCorrect();
+      setTimeout(() => {
+        session.index++;
+        session.index >= session.queue.length ? showResults() : loadQuestion();
+      }, 320);
+    }
+  }
+
+  function endSession() { showScreen('home'); }
+
+  function showResults() {
+    const avg = session.times.reduce((a, b) => a + b, 0) / session.times.length;
+    document.getElementById('resultTime').textContent = avg.toFixed(2) + 's';
+    showScreen('result');
+  }
+
+  wireNumpad(handleInput);
+  initSettingsUI();
+</script>
+</body>
+</html>
