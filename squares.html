@@ -8,16 +8,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-  #train { justify-content: space-between; padding: 0; gap: 0; }
+  /* Train screen: top-bar + stage + numpad, all fit in 100dvh */
+  #train { justify-content: flex-start; }
 
   .question-number {
-    font-size: clamp(6rem, 28vw, 13rem);
+    font-size: clamp(5rem, 26vw, 12rem);
     font-weight: 800; letter-spacing: -0.04em; line-height: 1;
-    user-select: none;
+    user-select: none; flex-shrink: 0;
   }
   .superscript {
-    font-size: clamp(2.2rem, 10vw, 5rem);
+    font-size: clamp(2rem, 10vw, 5rem);
     vertical-align: super; color: var(--accent); font-weight: 700;
+  }
+
+  /* page-specific topbar for home/settings screens */
+  .page-topbar {
+    width: 100%; display: flex; justify-content: flex-end;
+    padding: 16px 20px 0; flex-shrink: 0;
   }
 </style>
 </head>
@@ -26,38 +33,45 @@
 
 <!-- HOME -->
 <div class="screen active" id="home">
-  <div style="position:absolute;top:20px;right:24px">
+  <div class="page-topbar">
     <button class="theme-toggle" onclick="toggleTheme()"></button>
   </div>
-  <div class="hub-title" style="margin-bottom:4px">
-    <h1 style="font-size:clamp(3rem,14vw,6rem);letter-spacing:-0.04em">x²</h1>
-    <p>Squares Training</p>
-  </div>
-  <div class="btn-group" style="margin-top:32px">
-    <button class="btn btn-primary" onclick="startTraining()">Start</button>
-    <button class="btn btn-ghost"   onclick="showScreen('settings')">Settings</button>
-    <a class="btn btn-ghost" href="index.html" style="text-align:center;text-decoration:none">← Home</a>
+  <div class="center-content" style="gap:32px">
+    <div class="hub-title">
+      <h1 style="font-size:clamp(3rem,14vw,6rem);letter-spacing:-0.04em">x²</h1>
+      <p>Squares Training</p>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="startTraining()">Start</button>
+      <button class="btn btn-ghost"   onclick="showScreen('settings')">Settings</button>
+      <a class="btn btn-ghost" href="index.html" style="text-align:center;text-decoration:none">← Home</a>
+    </div>
   </div>
 </div>
 
 <!-- SETTINGS -->
 <div class="screen" id="settings">
-  <div class="settings-body">
-    <div class="settings-header">
-      <button class="back-btn" onclick="saveSettings()">←</button>
-      <h2>Settings</h2>
-    </div>
-    <div class="setting-group">
-      <div class="setting-label">Number range</div>
-      <div class="setting-row">
-        <input class="num-input" id="rangeMin" type="number" min="1" max="999" inputmode="numeric">
-        <span>to</span>
-        <input class="num-input" id="rangeMax" type="number" min="1" max="999" inputmode="numeric">
+  <div class="page-topbar" style="justify-content:flex-start">
+    <!-- empty, back btn inside settings-body -->
+  </div>
+  <div class="center-content" style="gap:0">
+    <div class="settings-body">
+      <div class="settings-header">
+        <button class="back-btn" onclick="saveSettings()">←</button>
+        <h2>Settings</h2>
       </div>
-      <div class="setting-error" id="settingError"></div>
-    </div>
-    <div class="btn-group">
-      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+      <div class="setting-group">
+        <div class="setting-label">Number range</div>
+        <div class="setting-row">
+          <input class="num-input" id="rangeMin" type="number" min="1" max="999" inputmode="numeric">
+          <span>to</span>
+          <input class="num-input" id="rangeMax" type="number" min="1" max="999" inputmode="numeric">
+        </div>
+        <div class="setting-error" id="settingError"></div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+      </div>
     </div>
   </div>
 </div>
@@ -96,22 +110,24 @@
 
 <!-- RESULT -->
 <div class="screen" id="result">
-  <div class="result-stat">
-    <div class="big" id="resultTime">—</div>
-    <div class="label">avg. seconds per question</div>
-  </div>
-  <div class="slowest-list" id="slowestList"></div>
-  <div class="btn-group" style="margin-top:24px">
-    <button class="btn btn-primary" id="retrySlowBtn" onclick="retrySloweset()" style="display:none">Retry slowest</button>
-    <button class="btn btn-ghost"   onclick="startTraining()">Again</button>
-    <button class="btn btn-ghost"   onclick="showScreen('home')">Home</button>
+  <div class="center-content" style="gap:16px">
+    <div class="result-stat">
+      <div class="big" id="resultTime">—</div>
+      <div class="label">avg. seconds per question</div>
+    </div>
+    <div class="slowest-list" id="slowestList"></div>
+    <div class="btn-group" style="margin-top:8px">
+      <button class="btn btn-primary" id="retrySlowBtn" onclick="retrySlowest()" style="display:none">Retry slowest</button>
+      <button class="btn btn-ghost"   onclick="startTraining()">Again</button>
+      <button class="btn btn-ghost"   onclick="showScreen('home')">Home</button>
+    </div>
   </div>
 </div>
 
 <script src="app.js"></script>
 <script>
   const cfg = { min: 10, max: 100 };
-  const session = { queue: [], index: 0, typed: '', timesLog: [], questionStart: 0, isRetry: false };
+  const session = { queue: [], index: 0, typed: '', timesLog: [], questionStart: 0 };
 
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -143,17 +159,15 @@
     session.queue = buildQueue();
     session.index = 0;
     session.timesLog = [];
-    session.isRetry = false;
     showScreen('train');
     loadQuestion();
   }
 
-  function retrySloweset() {
+  function retrySlowest() {
     const worst = getSlowest(session.timesLog, Math.max(3, Math.ceil(session.timesLog.length * 0.3)));
     session.queue = shuffle(worst.map(w => w.data));
     session.index = 0;
     session.timesLog = [];
-    session.isRetry = true;
     showScreen('train');
     loadQuestion();
   }
@@ -188,14 +202,12 @@
   function showResults() {
     const avg = session.timesLog.reduce((a, b) => a + b.time, 0) / session.timesLog.length;
     document.getElementById('resultTime').textContent = avg.toFixed(2) + 's';
-
-    // Slowest 3 entries
     const worst = getSlowest(session.timesLog, 3);
     const listEl = document.getElementById('slowestList');
     listEl.innerHTML = '';
     if (worst.length) {
       const hdr = document.createElement('div');
-      hdr.style.cssText = 'font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;font-weight:500;width:100%;max-width:280px;';
+      hdr.style.cssText = 'font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;font-weight:500;';
       hdr.textContent = 'Slowest';
       listEl.appendChild(hdr);
       worst.forEach(w => {
@@ -205,9 +217,7 @@
         listEl.appendChild(row);
       });
     }
-
-    const retryBtn = document.getElementById('retrySlowBtn');
-    retryBtn.style.display = session.timesLog.length > 1 ? 'block' : 'none';
+    document.getElementById('retrySlowBtn').style.display = session.timesLog.length > 1 ? 'block' : 'none';
     showScreen('result');
   }
 

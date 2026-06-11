@@ -8,30 +8,34 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-  #home { gap: 44px; }
-  .home-top { position: absolute; top: 20px; right: 24px; }
+  .home-topbar {
+    width: 100%; display: flex; justify-content: flex-end;
+    padding: 16px 20px 0; flex-shrink: 0;
+  }
 </style>
 </head>
 <body>
 <div class="screen active" id="home">
-  <div class="home-top">
-    <button class="theme-toggle" onclick="toggleTheme()">☀ Light</button>
+  <div class="home-topbar">
+    <button class="theme-toggle" onclick="toggleTheme()"></button>
   </div>
-  <div class="hub-title">
-    <h1>Mental Math</h1>
-    <p>Train your arithmetic</p>
-  </div>
-  <div class="mode-cards">
-    <a class="mode-card" href="squares.html">
-      <div class="mode-card-symbol">x²</div>
-      <div class="mode-card-title">Squares</div>
-      <div class="mode-card-desc">Square any number in your head</div>
-    </a>
-    <a class="mode-card" href="multiply.html">
-      <div class="mode-card-symbol">×</div>
-      <div class="mode-card-title">Multiply</div>
-      <div class="mode-card-desc">Multi-digit multiplication</div>
-    </a>
+  <div class="center-content" style="gap:36px">
+    <div class="hub-title">
+      <h1>Mental Math</h1>
+      <p>Train your arithmetic</p>
+    </div>
+    <div class="mode-cards">
+      <a class="mode-card" href="squares.html">
+        <div class="mode-card-symbol">x²</div>
+        <div class="mode-card-title">Squares</div>
+        <div class="mode-card-desc">Square any number in your head</div>
+      </a>
+      <a class="mode-card" href="multiply.html">
+        <div class="mode-card-symbol">×</div>
+        <div class="mode-card-title">Multiply</div>
+        <div class="mode-card-desc">Multi-digit multiplication</div>
+      </a>
+    </div>
   </div>
 </div>
 <script src="app.js"></script>

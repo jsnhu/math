@@ -8,33 +8,38 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-  #train { justify-content: space-between; padding: 0; gap: 0; }
+  #train { justify-content: flex-start; }
 
-  /* Stacked multiplication layout — like long multiplication on paper */
+  /* Stacked multiplication: top number, then × + bottom number + underline */
   .question-stack {
     display: flex; flex-direction: column;
     align-items: flex-end;
     user-select: none;
-    gap: 0;
+    flex-shrink: 0;
   }
   .expr-num-top {
     font-weight: 800; letter-spacing: -0.04em; line-height: 1.05;
-    font-size: clamp(4rem, 20vw, 9rem);
+    font-size: clamp(3.5rem, 18vw, 8rem);
   }
-  /* Bottom row: × on the left, number on the right, line underneath */
+  /* × sits left of the bottom number; underline is border-bottom of this row */
   .expr-bottom-row {
     display: flex; align-items: baseline; gap: 10px;
     border-bottom: 2.5px solid var(--border);
-    padding-bottom: 6px; margin-top: 2px;
+    padding-bottom: 5px; margin-top: 2px;
   }
   .expr-op {
     color: var(--accent); font-weight: 700;
-    font-size: clamp(2rem, 8vw, 4rem); line-height: 1;
+    font-size: clamp(1.8rem, 7vw, 3.5rem); line-height: 1;
     flex-shrink: 0;
   }
   .expr-num-bot {
     font-weight: 800; letter-spacing: -0.04em; line-height: 1.05;
-    font-size: clamp(4rem, 20vw, 9rem);
+    font-size: clamp(3.5rem, 18vw, 8rem);
+  }
+
+  .page-topbar {
+    width: 100%; display: flex; justify-content: flex-end;
+    padding: 16px 20px 0; flex-shrink: 0;
   }
 
   /* Settings: digit steppers */
@@ -48,63 +53,67 @@
 
 <!-- HOME -->
 <div class="screen active" id="home">
-  <div style="position:absolute;top:20px;right:24px">
+  <div class="page-topbar">
     <button class="theme-toggle" onclick="toggleTheme()"></button>
   </div>
-  <div class="hub-title" style="margin-bottom:4px">
-    <h1 style="font-size:clamp(2.5rem,12vw,5rem);letter-spacing:-0.04em">a×b</h1>
-    <p>Multiplication Training</p>
-  </div>
-  <div style="margin-top:8px;color:var(--muted);font-size:0.8rem;" id="homeSubtitle"></div>
-  <div class="btn-group" style="margin-top:32px">
-    <button class="btn btn-primary" onclick="startTraining()">Start</button>
-    <button class="btn btn-ghost"   onclick="openSettings()">Settings</button>
-    <a class="btn btn-ghost" href="index.html" style="text-align:center;text-decoration:none">← Home</a>
+  <div class="center-content" style="gap:28px">
+    <div class="hub-title">
+      <h1 style="font-size:clamp(2.5rem,12vw,5rem);letter-spacing:-0.04em">a×b</h1>
+      <p>Multiplication Training</p>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);" id="homeSubtitle"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="startTraining()">Start</button>
+      <button class="btn btn-ghost"   onclick="openSettings()">Settings</button>
+      <a class="btn btn-ghost" href="index.html" style="text-align:center;text-decoration:none">← Home</a>
+    </div>
   </div>
 </div>
 
 <!-- SETTINGS -->
 <div class="screen" id="settings">
-  <div class="settings-body">
-    <div class="settings-header">
-      <button class="back-btn" onclick="saveSettings()">←</button>
-      <h2>Settings</h2>
-    </div>
-    <div class="setting-group">
-      <div class="setting-label">Digits per operand</div>
-      <div class="stepper-row">
-        <div class="stepper-col">
-          <div class="stepper-label">First number</div>
-          <div class="stepper">
-            <button class="stepper-btn" onclick="adjustDigits('A',-1)">−</button>
-            <div class="stepper-val" id="digitsAVal">2</div>
-            <button class="stepper-btn" onclick="adjustDigits('A',+1)">+</button>
+  <div class="center-content" style="gap:0">
+    <div class="settings-body">
+      <div class="settings-header">
+        <button class="back-btn" onclick="saveSettings()">←</button>
+        <h2>Settings</h2>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">Digits per operand</div>
+        <div class="stepper-row">
+          <div class="stepper-col">
+            <div class="stepper-label">First number</div>
+            <div class="stepper">
+              <button class="stepper-btn" onclick="adjustDigits('A',-1)">−</button>
+              <div class="stepper-val" id="digitsAVal">2</div>
+              <button class="stepper-btn" onclick="adjustDigits('A',+1)">+</button>
+            </div>
+            <div style="font-size:0.68rem;color:var(--muted);text-align:center" id="rangeHintA">10–99</div>
           </div>
-          <div style="font-size:0.68rem;color:var(--muted);text-align:center" id="rangeHintA">10–99</div>
-        </div>
-        <div class="stepper-col">
-          <div class="stepper-label">Second number</div>
-          <div class="stepper">
-            <button class="stepper-btn" onclick="adjustDigits('B',-1)">−</button>
-            <div class="stepper-val" id="digitsBVal">2</div>
-            <button class="stepper-btn" onclick="adjustDigits('B',+1)">+</button>
+          <div class="stepper-col">
+            <div class="stepper-label">Second number</div>
+            <div class="stepper">
+              <button class="stepper-btn" onclick="adjustDigits('B',-1)">−</button>
+              <div class="stepper-val" id="digitsBVal">2</div>
+              <button class="stepper-btn" onclick="adjustDigits('B',+1)">+</button>
+            </div>
+            <div style="font-size:0.68rem;color:var(--muted);text-align:center" id="rangeHintB">10–99</div>
           </div>
-          <div style="font-size:0.68rem;color:var(--muted);text-align:center" id="rangeHintB">10–99</div>
         </div>
       </div>
-    </div>
-    <div class="setting-group">
-      <div class="setting-label">Questions per session</div>
-      <div class="rounds-row">
-        <div class="stepper">
-          <button class="stepper-btn" onclick="adjustRounds(-5)">−</button>
-          <div class="stepper-val" id="roundsVal">20</div>
-          <button class="stepper-btn" onclick="adjustRounds(+5)">+</button>
+      <div class="setting-group">
+        <div class="setting-label">Questions per session</div>
+        <div class="rounds-row">
+          <div class="stepper">
+            <button class="stepper-btn" onclick="adjustRounds(-5)">−</button>
+            <div class="stepper-val" id="roundsVal">20</div>
+            <button class="stepper-btn" onclick="adjustRounds(+5)">+</button>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="btn-group">
-      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+      </div>
     </div>
   </div>
 </div>
@@ -147,15 +156,17 @@
 
 <!-- RESULT -->
 <div class="screen" id="result">
-  <div class="result-stat">
-    <div class="big" id="resultTime">—</div>
-    <div class="label">avg. seconds per question</div>
-  </div>
-  <div class="slowest-list" id="slowestList"></div>
-  <div class="btn-group" style="margin-top:24px">
-    <button class="btn btn-primary" id="retrySlowBtn" onclick="retrySlowest()" style="display:none">Retry slowest</button>
-    <button class="btn btn-ghost"   onclick="startTraining()">Again</button>
-    <button class="btn btn-ghost"   onclick="showScreen('home')">Home</button>
+  <div class="center-content" style="gap:16px">
+    <div class="result-stat">
+      <div class="big" id="resultTime">—</div>
+      <div class="label">avg. seconds per question</div>
+    </div>
+    <div class="slowest-list" id="slowestList"></div>
+    <div class="btn-group" style="margin-top:8px">
+      <button class="btn btn-primary" id="retrySlowBtn" onclick="retrySlowest()" style="display:none">Retry slowest</button>
+      <button class="btn btn-ghost"   onclick="startTraining()">Again</button>
+      <button class="btn btn-ghost"   onclick="showScreen('home')">Home</button>
+    </div>
   </div>
 </div>
 
@@ -259,13 +270,12 @@
   function showResults() {
     const avg = session.timesLog.reduce((a, b) => a + b.time, 0) / session.timesLog.length;
     document.getElementById('resultTime').textContent = avg.toFixed(2) + 's';
-
     const worst = getSlowest(session.timesLog, 3);
     const listEl = document.getElementById('slowestList');
     listEl.innerHTML = '';
     if (worst.length) {
       const hdr = document.createElement('div');
-      hdr.style.cssText = 'font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;font-weight:500;width:100%;max-width:280px;';
+      hdr.style.cssText = 'font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;font-weight:500;';
       hdr.textContent = 'Slowest';
       listEl.appendChild(hdr);
       worst.forEach(w => {
@@ -276,9 +286,7 @@
         listEl.appendChild(row);
       });
     }
-
-    document.getElementById('retrySlowBtn').style.display =
-      session.timesLog.length > 1 ? 'block' : 'none';
+    document.getElementById('retrySlowBtn').style.display = session.timesLog.length > 1 ? 'block' : 'none';
     showScreen('result');
   }
 
