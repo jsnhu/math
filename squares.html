@@ -2,22 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Squares — Mental Math</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
   #train { justify-content: space-between; padding: 0; gap: 0; }
 
   .question-number {
-    font-size: clamp(5rem, 22vw, 10rem);
-    font-weight: 700; letter-spacing: -0.04em; line-height: 1;
+    font-size: clamp(6rem, 28vw, 13rem);
+    font-weight: 800; letter-spacing: -0.04em; line-height: 1;
     user-select: none;
   }
   .superscript {
-    font-size: clamp(2rem, 8vw, 4rem);
-    vertical-align: super; color: var(--accent); font-weight: 600;
+    font-size: clamp(2.2rem, 10vw, 5rem);
+    vertical-align: super; color: var(--accent); font-weight: 700;
   }
 </style>
 </head>
@@ -26,8 +26,11 @@
 
 <!-- HOME -->
 <div class="screen active" id="home">
+  <div style="position:absolute;top:20px;right:24px">
+    <button class="theme-toggle" onclick="toggleTheme()"></button>
+  </div>
   <div class="hub-title" style="margin-bottom:4px">
-    <h1 style="font-size:clamp(2.5rem,12vw,5rem);letter-spacing:-0.04em">x²</h1>
+    <h1 style="font-size:clamp(3rem,14vw,6rem);letter-spacing:-0.04em">x²</h1>
     <p>Squares Training</p>
   </div>
   <div class="btn-group" style="margin-top:32px">
@@ -97,8 +100,10 @@
     <div class="big" id="resultTime">—</div>
     <div class="label">avg. seconds per question</div>
   </div>
-  <div class="btn-group" style="margin-top:40px">
-    <button class="btn btn-primary" onclick="startTraining()">Again</button>
+  <div class="slowest-list" id="slowestList"></div>
+  <div class="btn-group" style="margin-top:24px">
+    <button class="btn btn-primary" id="retrySlowBtn" onclick="retrySloweset()" style="display:none">Retry slowest</button>
+    <button class="btn btn-ghost"   onclick="startTraining()">Again</button>
     <button class="btn btn-ghost"   onclick="showScreen('home')">Home</button>
   </div>
 </div>
@@ -106,15 +111,13 @@
 <script src="app.js"></script>
 <script>
   const cfg = { min: 10, max: 100 };
-  const session = { queue: [], index: 0, typed: '', times: [], questionStart: 0 };
+  const session = { queue: [], index: 0, typed: '', timesLog: [], questionStart: 0, isRetry: false };
 
-  // ── screens ──
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
 
-  // ── settings ──
   function initSettingsUI() {
     document.getElementById('rangeMin').value = cfg.min;
     document.getElementById('rangeMax').value = cfg.max;
@@ -130,7 +133,6 @@
     showScreen('home');
   }
 
-  // ── training ──
   function buildQueue() {
     const nums = [];
     for (let i = cfg.min; i <= cfg.max; i++) nums.push(i);
@@ -140,7 +142,18 @@
   function startTraining() {
     session.queue = buildQueue();
     session.index = 0;
-    session.times = [];
+    session.timesLog = [];
+    session.isRetry = false;
+    showScreen('train');
+    loadQuestion();
+  }
+
+  function retrySloweset() {
+    const worst = getSlowest(session.timesLog, Math.max(3, Math.ceil(session.timesLog.length * 0.3)));
+    session.queue = shuffle(worst.map(w => w.data));
+    session.index = 0;
+    session.timesLog = [];
+    session.isRetry = true;
     showScreen('train');
     loadQuestion();
   }
@@ -159,25 +172,47 @@
     renderAnswer(session.typed, 'answerDisplay');
     const n = session.queue[session.index];
     if (session.typed !== '' && parseInt(session.typed, 10) === n * n) {
-      session.times.push((Date.now() - session.questionStart) / 1000);
+      const t = (Date.now() - session.questionStart) / 1000;
+      session.timesLog.push({ label: `${n}²`, time: t, data: n });
       markCorrect('answerDisplay');
       flashCorrect();
       setTimeout(() => {
         session.index++;
         session.index >= session.queue.length ? showResults() : loadQuestion();
-      }, 320);
+      }, 120);
     }
   }
 
   function endSession() { showScreen('home'); }
 
   function showResults() {
-    const avg = session.times.reduce((a, b) => a + b, 0) / session.times.length;
+    const avg = session.timesLog.reduce((a, b) => a + b.time, 0) / session.timesLog.length;
     document.getElementById('resultTime').textContent = avg.toFixed(2) + 's';
+
+    // Slowest 3 entries
+    const worst = getSlowest(session.timesLog, 3);
+    const listEl = document.getElementById('slowestList');
+    listEl.innerHTML = '';
+    if (worst.length) {
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:4px;font-weight:500;width:100%;max-width:280px;';
+      hdr.textContent = 'Slowest';
+      listEl.appendChild(hdr);
+      worst.forEach(w => {
+        const row = document.createElement('div');
+        row.className = 'slowest-item';
+        row.innerHTML = `<span class="q">${w.label} = ${w.data * w.data}</span><span class="t">${w.time.toFixed(2)}s</span>`;
+        listEl.appendChild(row);
+      });
+    }
+
+    const retryBtn = document.getElementById('retrySlowBtn');
+    retryBtn.style.display = session.timesLog.length > 1 ? 'block' : 'none';
     showScreen('result');
   }
 
   wireNumpad(handleInput);
+  initTheme();
   initSettingsUI();
 </script>
 </body>

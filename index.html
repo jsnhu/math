@@ -2,17 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Mental Math</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
   #home { gap: 44px; }
+  .home-top { position: absolute; top: 20px; right: 24px; }
 </style>
 </head>
 <body>
 <div class="screen active" id="home">
+  <div class="home-top">
+    <button class="theme-toggle" onclick="toggleTheme()">☀ Light</button>
+  </div>
   <div class="hub-title">
     <h1>Mental Math</h1>
     <p>Train your arithmetic</p>
@@ -30,5 +34,7 @@
     </a>
   </div>
 </div>
+<script src="app.js"></script>
+<script>initTheme();</script>
 </body>
 </html>
