@@ -537,7 +537,7 @@ function goToSettings(mode){
 
 function renderSettings(mode){
   const isSquares = mode === 'squares';
-  document.getElementById('settings-eyebrow').textContent = isSquares ? 'Squares' : 'Multiplication';
+  document.getElementById('settings-eyebrow').textContent = 'Settings';
   document.getElementById('settings-title').textContent = isSquares ? 'Squares' : 'Multiplication';
   document.getElementById('settings-sub').textContent = isSquares
     ? 'n × n — choose how large n gets.'
@@ -691,15 +691,12 @@ function handleKey(k){
   if(next === answerStr){
     const elapsed = (performance.now() - session.startTs) / 1000;
     session.times.push({ label: p.display.replace(/<[^>]+>/g,''), seconds: elapsed });
-    zone.classList.add('flash-good');
-    setTimeout(() => {
-      session.index++;
-      if(session.index >= session.problems.length){
-        finishSession();
-      } else {
-        loadProblem();
-      }
-    }, 160);
+    session.index++;
+    if(session.index >= session.problems.length){
+      finishSession();
+    } else {
+      loadProblem();
+    }
   } else if(next.length === answerStr.length){
     // wrong, full length typed but incorrect -> shake and clear
     zone.classList.add('flash-bad');
