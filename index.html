@@ -28,8 +28,8 @@
     --sans: 'Manrope', system-ui, sans-serif;
   }
 
-  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-  html,body{height:100%;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation;}
+  html,body{height:100%; overscroll-behavior:none;}
   body{
     margin:0;
     background:var(--bg);
@@ -37,8 +37,11 @@
     font-family:var(--sans);
     min-height:100vh;
     min-height:100dvh;
-    overflow-x:hidden;
+    overflow:hidden;
+    position:fixed;
+    inset:0;
     -webkit-font-smoothing:antialiased;
+    touch-action: manipulation;
   }
 
   /* subtle grain / vignette so flat dark bg has texture */
@@ -54,12 +57,14 @@
   #app{
     position:relative;
     z-index:1;
-    min-height:100vh;
-    min-height:100dvh;
+    height:100vh;
+    height:100dvh;
     display:flex;
     flex-direction:column;
     max-width:520px;
     margin:0 auto;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
   }
 
   .screen{
@@ -512,6 +517,20 @@
 </div>
 
 <script>
+/* ---------------- prevent mobile zoom/scroll gestures ---------------- */
+document.addEventListener('touchstart', (e) => {
+  if(e.touches.length > 1) e.preventDefault(); // pinch
+}, { passive:false });
+
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if(now - lastTouchEnd <= 350) e.preventDefault(); // double-tap
+  lastTouchEnd = now;
+}, { passive:false });
+
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+
 /* ---------------- state ---------------- */
 const settings = {
   squares:        { digits: 2, count: 20 },
