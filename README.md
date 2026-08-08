@@ -1,2 +1,2 @@
 # math
-mental math training website
+mental math training website by claude
